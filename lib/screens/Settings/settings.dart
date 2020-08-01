@@ -72,19 +72,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 Future<void> alertSuggestion(context) async {
   return showDialog<void>(
     context: context,
-    barrierDismissible: false, // user must tap button!
+    barrierDismissible: true,
     builder: (BuildContext context) => 
       AlertDialog(
         title: Text("Hola :)"),
-        content: Text("Esta aplicación es de código abierto. Si sabes programar podes hacer pull request y si no podes dejarme un mail con la sugerencia."),
+        content: Text("Esta aplicación es de código abierto, si sabes programar podes hacer pull request. También me podes dejar un mail con la sugerencia."),
         actions: [
           FlatButton(
           child: Text("Link Repo"),
-          onPressed: () => _launchURL('https:'),
+          onPressed: () => _launchURL('https://github.com/maurosch/mi-exactas'),
         ),
         FlatButton(
           child: Text("Mandarme mail"),
-          onPressed: () => _launchURL('mailto:mschiavinato@dc.uba.ar?subject=Error/Sugerencia App +Exactas'),
+          onPressed: () => _launchURL('mailto:mschiavinato@dc.uba.ar?subject=Sugerencia Mi-Exactas'),
         )
         ],
       ),
