@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "555448988947",
+    "firebase_url": "https://planestudios-42eb1.firebaseio.com",
+    "project_id": "planestudios-42eb1",
+    "storage_bucket": "planestudios-42eb1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555448988947:android:31b200f5d36002b08296e6",
+        "android_client_info": {
+          "package_name": "com.plan_estudios_exactas.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "555448988947-9nks3be58nvv1n53iupcvkanqmprkq6k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCD3f2xVzSXBeMCfwKLQaeyr9wXwReTB_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "555448988947-9nks3be58nvv1n53iupcvkanqmprkq6k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
