@@ -1,6 +1,6 @@
 # Plan Estudios Exactas
 
-Mobile App hecha en Flutter para exactas Uba.  
+Mobile App hecha en Flutter para seguir el plan de estudios de cualquier carrera de exactas Uba.  
 
 ![screenshots](screenshots.png)
 
