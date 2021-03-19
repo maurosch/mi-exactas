@@ -1,9 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:plan_estudios/screens/main.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:plan_estudios/screens/main.dart';
+FirebaseApp defaultApp = await Firebase.initializeApp();
 
 //void main() => runApp(MyApp());
 void main() => initializeDateFormatting().then((_) => runApp(MyApp()));
+
 
 class MyApp extends StatelessWidget {
   @override

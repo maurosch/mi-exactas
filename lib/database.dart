@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'dart:typed_data';
-import 'package:flutter/services.dart';
+
 import 'models.dart';
 
 // CorrelativesSubjects
@@ -15,6 +18,13 @@ import 'models.dart';
 // OptativeSubjects (id, points, name, shortName, idDegree, tp, grade, year, quarter)
 // Order
 // Subjects
+
+class EventFb {
+  EventFb({this.dateStart, this.dateEnd, this.text});
+  final DateTime dateStart;
+  final DateTime dateEnd;
+  final String text;
+}
 
 
 
@@ -293,37 +303,40 @@ class DbHelper {
     var dbAux = await db;
     Map<DateTime, List<Event>> response = Map<DateTime, List<Event>>();
 
+
+    // Access Firestore using the default Firebase app:
+	FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+	final data = (await firestore.collection('events').get())
+		.docs.map((v) => v.data() as EventFb).toList();
+
+	for (var i in data) {
+		var event = Event(text: i.text, colorHex: int.parse("0xfffff"));
+		if (response[i.dateStart] == null)
+			response[i.dateStart] = [event];
+		else
+			response[i.dateStart].add(event);
+	}
+
+
     /* //Obtengo del servidor que todavía no hice
     if (eventsLastUpdate == 0 ||
         DateTime.fromMillisecondsSinceEpoch(eventsLastUpdate)
                 .difference(DateTime.now())
                 .inDays >
-            1) {
+            1) {*/
       
-      var result =
-          await dbAux.query('Events', columns: ['date', 'text', 'colorHex']);
-      for (var i in result) {
-        var event =
-            Event(text: i['text'], colorHex: int.parse("0xff${i['colorHex']}"));
-        if (response[DateTime.parse(i['date'])] == null)
-          response[DateTime.parse(i['date'])] = [event];
-        else
-          response[DateTime.parse(i['date'])].add(event);
-      }
-      await prefs.setInt(
-          'eventsLastUpdate', DateTime.now().millisecondsSinceEpoch);
-    } else*/ {
-      var result =
-          await dbAux.query('Events', columns: ['date', 'text', 'colorHex']);
-      for (var i in result) {
-        var event =
-            Event(text: i['text'], colorHex: int.parse("0xff${i['colorHex']}"));
-        if (response[DateTime.parse(i['date'])] == null)
-          response[DateTime.parse(i['date'])] = [event];
-        else
-          response[DateTime.parse(i['date'])].add(event);
-      }
-    }
+   
+	/*var result =
+		await dbAux.query('Events', columns: ['date', 'text', 'colorHex']);
+	for (var i in result) {
+	var event =
+		Event(text: i['text'], colorHex: int.parse("0xff${i['colorHex']}"));
+	if (response[DateTime.parse(i['date'])] == null)
+		response[DateTime.parse(i['date'])] = [event];
+	else
+		response[DateTime.parse(i['date'])].add(event);
+	}*/
 
     return response;
   }

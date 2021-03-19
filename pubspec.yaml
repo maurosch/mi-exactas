@@ -20,10 +20,10 @@ dependencies:
   flutter:
     sdk: flutter
   sqflite: ^1.2.0
-  path_provider: 1.6.5
-  #firebase_core: ^0.4.0+9
+  path_provider: ^2.0.1
+  firebase_core: ^1.0.1
   #firebase_auth: ^0.14.0+5
-  #cloud_firestore: ^0.12.9+5
+  cloud_firestore: ^1.0.1
   #firebase_database: ^3.0.4
   #firebase_analytics: ^5.0.2
   cupertino_icons: ^0.1.2
@@ -31,7 +31,7 @@ dependencies:
   font_awesome_flutter: 8.5.0
   html: ^0.14.0+3
   http: ^0.12.0+4
-  url_launcher: ^5.4.1
+  url_launcher: ^6.0.2
   intro_slider: ^2.2.9
   intl: ^0.16.1
   table_calendar: ^2.2.3
