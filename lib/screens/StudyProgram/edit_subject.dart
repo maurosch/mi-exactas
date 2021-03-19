@@ -66,7 +66,7 @@ class SubjectEditScreenState extends State<SubjectEditScreen> {
     return WillPopScope(
       onWillPop: () => saveData(),
       child: Scaffold(
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
         extendBodyBehindAppBar: true,
         backgroundColor: Color(0xff2E3136),
         appBar: AppBar(

@@ -1,3 +1,4 @@
+import 'dart:ui';
 
 class Subject {
   Subject({this.name, this.shortName, this.id});
@@ -11,14 +12,25 @@ class Subject {
   }
 }
 
-class Event {
-  Event({this.text, this.colorHex});
+class EventFb {
+  final DateTime dateStart;
+  final DateTime dateEnd;
   final String text;
-  final int colorHex;
+
+  EventFb.fromJson(Map json)
+      : dateStart = json["date_start"].toDate(),
+        dateEnd = json["date_end"].toDate(),
+        text = json["name"];
+}
+
+class Event {
+  Event({this.text, this.color});
+  final String text;
+  final Color color;
 }
 
 class SubjectWithUserInfo extends Subject {
-  SubjectWithUserInfo.fromJson(Map json) : super.fromJson(json){
+  SubjectWithUserInfo.fromJson(Map json) : super.fromJson(json) {
     grade = json['grade'];
     year = json['year'];
     quarter = json['quarter'];
@@ -32,7 +44,7 @@ class SubjectWithUserInfo extends Subject {
 }
 
 class OptativeSubjectWithUserInfo extends SubjectWithUserInfo {
-  OptativeSubjectWithUserInfo.fromJson(Map json) : super.fromJson(json){
+  OptativeSubjectWithUserInfo.fromJson(Map json) : super.fromJson(json) {
     points = json['points'];
     idDegree = json['idDegree'];
   }
@@ -47,7 +59,7 @@ class Degree {
   int id;
   int optativePoints;
 
-  Degree.fromJson(Map json){ 
+  Degree.fromJson(Map json) {
     name = json['name'];
     shortName = json['shortName'];
     id = json['id'];

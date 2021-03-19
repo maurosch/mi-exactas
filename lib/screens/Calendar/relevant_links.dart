@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+//Links importantes para cada carrera. Ej: cubawiki para computacion.
+
 /*class _LinkTextSpan extends TextSpan {
 
   // Beware!

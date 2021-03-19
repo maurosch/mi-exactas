@@ -1,12 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-
 import 'models.dart';
 
 // CorrelativesSubjects
@@ -18,15 +16,6 @@ import 'models.dart';
 // OptativeSubjects (id, points, name, shortName, idDegree, tp, grade, year, quarter)
 // Order
 // Subjects
-
-class EventFb {
-  EventFb({this.dateStart, this.dateEnd, this.text});
-  final DateTime dateStart;
-  final DateTime dateEnd;
-  final String text;
-}
-
-
 
 class DbHelper {
   static final DbHelper _dbHelper = DbHelper._internal();
@@ -109,11 +98,15 @@ class DbHelper {
           {'id': x['id'], 'name': x['name'], 'shortName': x['shortName']});
     }
 
-    collection =
-        await _dbNew.query('Degrees', columns: ['id', 'name', 'shortName', 'optativePoints']);
+    collection = await _dbNew.query('Degrees',
+        columns: ['id', 'name', 'shortName', 'optativePoints']);
     for (var x in collection) {
-      batch.insert('Degrees',
-          {'id': x['id'], 'name': x['name'], 'shortName': x['shortName'], 'optativePoints' : x['optativePoints']});
+      batch.insert('Degrees', {
+        'id': x['id'],
+        'name': x['name'],
+        'shortName': x['shortName'],
+        'optativePoints': x['optativePoints']
+      });
     }
 
     collection = await _dbNew
@@ -153,9 +146,12 @@ class DbHelper {
   }
 
   Future<Degree> getDegreeInfo(int idDegree) async {
-    return (await (await db)
-            .query('Degrees', columns: ['name','shortName','id','optativePoints'], where: '"id" = $idDegree'))
-            .map( (x) => Degree.fromJson(x) ).toList().first;
+    return (await (await db).query('Degrees',
+            columns: ['name', 'shortName', 'id', 'optativePoints'],
+            where: '"id" = $idDegree'))
+        .map((x) => Degree.fromJson(x))
+        .toList()
+        .first;
   }
 
   void insertSubjectDone(int id, bool tp, num grade, DateTime date) async {
@@ -167,8 +163,12 @@ class DbHelper {
   }
 
   void insertOptativeSubject(Subject model, int idDegree) async {
-    await (await db).insert('OptativeSubjects', 
-      {'points': 0,'name': model.name,'shortName': model.shortName,'idDegree': idDegree});
+    await (await db).insert('OptativeSubjects', {
+      'points': 0,
+      'name': model.name,
+      'shortName': model.shortName,
+      'idDegree': idDegree
+    });
   }
 
   Future<List<SubjectWithUserInfo>> getInfoSubjects(int idDegree) async {
@@ -177,13 +177,27 @@ class DbHelper {
           LEFT JOIN DoneSubjects ON DoneSubjects.id = DegreeSubjects.idSubject 
           LEFT JOIN Subjects ON Subjects.id = DegreeSubjects.idSubject 
           WHERE DegreeSubjects.idDegree = $idDegree'''))
-          .map( (x) => SubjectWithUserInfo.fromJson(x) ).toList();
+        .map((x) => SubjectWithUserInfo.fromJson(x))
+        .toList();
   }
 
-  Future<List<OptativeSubjectWithUserInfo>> getInfoOptatives(int idDegree) async {
-    return (await (await db).query('OptativeSubjects', columns: ['idDegree', 
-      'id', 'name', 'tp', 'grade', 'year', 'quarter', 'shortName', 'points'], where: 'idDegree = $idDegree'))
-          .map( (x) => OptativeSubjectWithUserInfo.fromJson(x) ).toList();
+  Future<List<OptativeSubjectWithUserInfo>> getInfoOptatives(
+      int idDegree) async {
+    return (await (await db).query('OptativeSubjects',
+            columns: [
+              'idDegree',
+              'id',
+              'name',
+              'tp',
+              'grade',
+              'year',
+              'quarter',
+              'shortName',
+              'points'
+            ],
+            where: 'idDegree = $idDegree'))
+        .map((x) => OptativeSubjectWithUserInfo.fromJson(x))
+        .toList();
   }
 
   Future<List<Subject>> getCorrelativesToApprove(int id) async {
@@ -192,7 +206,8 @@ class DbHelper {
         INNER JOIN Subjects ON CorrelativesSubjects.idCorrelative = Subjects.id
         LEFT JOIN DoneSubjects ON DoneSubjects.id = CorrelativesSubjects.idCorrelative
         WHERE CorrelativesSubjects.idSubject = $id AND (DoneSubjects.tp IS NULL OR DoneSubjects.tp = 0) '''))
-        .map((e) => Subject.fromJson(e)).toList();
+        .map((e) => Subject.fromJson(e))
+        .toList();
   }
 
   Future<SubjectWithUserInfo> getSubjectInfoById(int id) async {
@@ -206,14 +221,27 @@ class DbHelper {
       return SubjectWithUserInfo.fromJson(data.first);
   }
 
-  Future<OptativeSubjectWithUserInfo> getSubjectOptativeInfoById(int id) async{
-    return (await (await db).query("OptativeSubjects", 
-      columns: ['id', 'points', 'name', 'shortName', 'idDegree', 'tp', 'grade', 'year', 'quarter'],
-      where: 'id = $id')).map( (x) => OptativeSubjectWithUserInfo.fromJson(x) )?.first;
+  Future<OptativeSubjectWithUserInfo> getSubjectOptativeInfoById(int id) async {
+    return (await (await db).query("OptativeSubjects",
+            columns: [
+              'id',
+              'points',
+              'name',
+              'shortName',
+              'idDegree',
+              'tp',
+              'grade',
+              'year',
+              'quarter'
+            ],
+            where: 'id = $id'))
+        .map((x) => OptativeSubjectWithUserInfo.fromJson(x))
+        ?.first;
   }
 
-  Future<int> deleteOptativeSubject(int id) async{
-    return (await (await db).delete('OptativeSubjects', where: 'id = ?', whereArgs: [id]));
+  Future<int> deleteOptativeSubject(int id) async {
+    return (await (await db)
+        .delete('OptativeSubjects', where: 'id = ?', whereArgs: [id]));
   }
 
   Future<bool> saveSubjectInfo(SubjectWithUserInfo data) async {
@@ -297,53 +325,32 @@ class DbHelper {
   }
 
   Future<Map<DateTime, List<Event>>> getEvents() async {
-    final prefs = await SharedPreferences.getInstance();
-    final eventsLastUpdate = prefs.getInt('eventsLastUpdate') ?? 0;
-
-    var dbAux = await db;
     Map<DateTime, List<Event>> response = Map<DateTime, List<Event>>();
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+    final data =
+        (await firestore.collection('events').get()) //TODO: Catch error
+            .docs
+            .map((v) => EventFb.fromJson(v.data()))
+            .toList(); //TODO: SOLO OBTENER DE ESTE ANIO?
 
-    // Access Firestore using the default Firebase app:
-	FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-	final data = (await firestore.collection('events').get())
-		.docs.map((v) => v.data() as EventFb).toList();
-
-	for (var i in data) {
-		var event = Event(text: i.text, colorHex: int.parse("0xfffff"));
-		if (response[i.dateStart] == null)
-			response[i.dateStart] = [event];
-		else
-			response[i.dateStart].add(event);
-	}
-
-
-    /* //Obtengo del servidor que todavía no hice
-    if (eventsLastUpdate == 0 ||
-        DateTime.fromMillisecondsSinceEpoch(eventsLastUpdate)
-                .difference(DateTime.now())
-                .inDays >
-            1) {*/
-      
-   
-	/*var result =
-		await dbAux.query('Events', columns: ['date', 'text', 'colorHex']);
-	for (var i in result) {
-	var event =
-		Event(text: i['text'], colorHex: int.parse("0xff${i['colorHex']}"));
-	if (response[DateTime.parse(i['date'])] == null)
-		response[DateTime.parse(i['date'])] = [event];
-	else
-		response[DateTime.parse(i['date'])].add(event);
-	}*/
+    for (var i in data) {
+      var event = Event(text: i.text, color: Colors.green[400]);
+      DateTime aux = i.dateStart.subtract(Duration(days: 1));
+      do {
+        aux = aux.add(Duration(days: 1));
+        if (response[i.dateEnd] == null)
+          response[aux] = [event];
+        else
+          response[aux].add(event);
+      } while (i.dateEnd.day != aux.day || i.dateEnd.month != aux.month);
+    }
 
     return response;
   }
 
   Future<List<Subject>> searchSubjects(String v) async {
-    if(v == "")
-      return <Subject>[];
+    if (v == "") return <Subject>[];
     return (await (await db).rawQuery('''
       SELECT id, name, shortName FROM Subjects WHERE name LIKE '%$v%' OR shortName LIKE '%$v%'
     ''')).map((e) => Subject.fromJson(e)).toList();

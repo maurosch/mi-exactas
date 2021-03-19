@@ -14,7 +14,7 @@ description: Plan de estudios fcen.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
@@ -34,8 +34,9 @@ dependencies:
   url_launcher: ^6.0.2
   intro_slider: ^2.2.9
   intl: ^0.16.1
-  table_calendar: ^2.2.3
+  table_calendar: ^2.3.3
   shared_preferences:
+  in_app_review: ^2.0.1
 
 dev_dependencies:
   flutter_test:
