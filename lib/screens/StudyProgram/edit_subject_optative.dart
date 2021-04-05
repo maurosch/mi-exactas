@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:plan_estudios/database.dart';
+import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/models.dart';
+import 'package:plan_estudios/screens/StudyProgram/util.dart';
 
 class OptativeSubjectEditScreen extends StatefulWidget {
-  const OptativeSubjectEditScreen({Key key, this.subjectId}) : super(key: key);
+  const OptativeSubjectEditScreen({Key? key, required this.subjectId})
+      : super(key: key);
   final int subjectId;
 
   @override
@@ -32,7 +34,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
 
   int cursadaMes = 0;
   String yearDone = DateTime.now().year.toString();
-  OptativeSubjectWithUserInfo _data;
+  late OptativeSubjectWithUserInfo _data;
 
   @override
   void initState() {
@@ -83,9 +85,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
             0.2,
             0.6
           ], colors: [
-            _data.tp
-                ? (_data.grade != null ? Color(0xff00AF89) : Colors.purple[600])
-                : Colors.transparent,
+            getColorSubject(_data),
             Colors.transparent
           ])),
           child: Column(
@@ -97,13 +97,21 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      TitleSubject(name: _data.name),
+                      TitleSubject(
+                          name: _data.name,
+                          notifyParent: (String name) {
+                            setState(() {
+                              _data.name = name;
+                            });
+                            print(_data.name);
+                            print(_data.shortName);
+                          }),
                       SizedBox(height: 20),
                       CheckboxListTile(
                         value: _data.tp,
                         activeColor: Colors.blueAccent,
                         controlAffinity: ListTileControlAffinity.leading,
-                        onChanged: (bool value) {
+                        onChanged: (bool? value) {
                           setState(() {
                             _data.tp = value;
                             _data.grade = null;
@@ -118,7 +126,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                                 disabledHint: 'TP no ap.',
                                 disabled: _data.tp == null || _data.tp == false,
                                 grade: _data.grade,
-                                notifyParent: (int grade) {
+                                notifyParent: (int? grade) {
                                   setState(() {
                                     _data.grade = grade;
                                   });
@@ -134,7 +142,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                           },
                           keyboardType: TextInputType.number,
                           inputFormatters: <TextInputFormatter>[
-                            WhitelistingTextInputFormatter.digitsOnly
+                            FilteringTextInputFormatter.digitsOnly
                           ],
                           decoration:
                               InputDecoration(labelText: "Puntos Optativa"),
@@ -148,20 +156,20 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                             decoration:
                                 InputDecoration(labelText: 'Cuatrimestre'),
                             value: cursadas[
-                                _data.quarter == null ? 0 : _data.quarter],
+                                _data.quarter != null ? _data.quarter! : 0],
                             items: cursadas.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child: new Text(value),
                               );
                             }).toList(),
-                            onChanged: (String newValue) {
-                              var aux = _data;
-                              aux.quarter = cursadas.indexOf(newValue);
-                              if (aux.quarter == 0) aux.quarter = null;
-                              setState(() {
-                                _data = aux;
-                              });
+                            onChanged: (String? newValue) {
+                              if (newValue != null) {
+                                final v = cursadas.indexOf(newValue);
+                                setState(() {
+                                  _data.quarter = v != 0 ? v : null;
+                                });
+                              }
                             },
                           )),
                           SizedBox(width: 25),
@@ -178,8 +186,8 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                                   child: new Text(value.toString()),
                                 );
                               }).toList(),
-                              onChanged: (String newValue) {
-                                if (newValue != 'Año') {
+                              onChanged: (String? newValue) {
+                                if (newValue != null && newValue != 'Año') {
                                   setState(() {
                                     _data.year = int.parse(newValue);
                                   });
@@ -204,12 +212,12 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
 
 class GradeSubjectInput extends StatelessWidget {
   const GradeSubjectInput(
-      {@required this.grade,
-      @required this.notifyParent,
-      @required this.disabled,
-      @required this.disabledHint});
-  final num grade;
-  final Function(int) notifyParent;
+      {this.grade,
+      required this.notifyParent,
+      required this.disabled,
+      required this.disabledHint});
+  final num? grade;
+  final Function(int?) notifyParent;
   final bool disabled;
   final String disabledHint;
 
@@ -219,7 +227,7 @@ class GradeSubjectInput extends StatelessWidget {
         ['Sin Aprobar'] + List<String>.generate(10, (i) => (i + 1).toString());
 
     final String gradeValue =
-        grade == null ? gradesList[0] : grade.truncate().toString();
+        grade == null ? gradesList[0] : grade!.truncate().toString();
 
     return FormField<String>(builder: (FormFieldState<String> state) {
       return InputDecorator(
@@ -238,10 +246,12 @@ class GradeSubjectInput extends StatelessWidget {
           }).toList(),
           onChanged: disabled
               ? null
-              : (String newValue) {
-                  int aux = gradesList.indexOf(newValue);
-                  if (aux == 0) aux = null;
-                  notifyParent(aux);
+              : (String? newValue) {
+                  if (newValue != null) {
+                    int? aux = gradesList.indexOf(newValue);
+                    if (aux == 0) aux = null;
+                    notifyParent(aux);
+                  }
                 },
         ),
       );
@@ -250,7 +260,7 @@ class GradeSubjectInput extends StatelessWidget {
 }
 
 class _TrashIcon extends StatelessWidget {
-  _TrashIcon({this.parentContext, this.subjectId});
+  _TrashIcon({required this.parentContext, required this.subjectId});
   final BuildContext parentContext;
   final int subjectId;
 
@@ -272,11 +282,11 @@ class _TrashIcon extends StatelessWidget {
           title: Text("Eliminar la optativa"),
           content: Text("¿Está seguro que quiere eliminar la optativa?"),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
                 onPressed: () =>
                     Navigator.of(parentContext, rootNavigator: true).pop(),
                 child: Text("Cancelar")),
-            FlatButton(onPressed: deleteSubject, child: Text("Continuar"))
+            TextButton(onPressed: deleteSubject, child: Text("Continuar"))
           ],
         ),
       ),
@@ -285,24 +295,22 @@ class _TrashIcon extends StatelessWidget {
 }
 
 class TitleSubject extends StatelessWidget {
-  TitleSubject({this.name});
+  TitleSubject({required this.name, required this.notifyParent});
   final String name;
+  final Function(String) notifyParent;
 
   @override
   Widget build(BuildContext ctx) {
     return Container(
-      width: double.infinity,
+      //width: 100,
       margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey, width: 1))),
-      child: FittedBox(
-        alignment: Alignment.bottomLeft,
-        fit: BoxFit.scaleDown,
-        child: Text(
-          name,
-          style: TextStyle(fontSize: 21.0, fontWeight: FontWeight.w400),
-        ),
+      child: Expanded(
+        //alignment: Alignment.bottomLeft,
+        //fit: BoxFit.scaleDown,
+        child: TextFormField(
+            initialValue: name,
+            decoration: InputDecoration(suffixIcon: Icon(Icons.edit)),
+            onFieldSubmitted: notifyParent),
       ),
     );
   }

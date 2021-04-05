@@ -1,70 +1,76 @@
 import 'dart:ui';
 
 class Subject {
-  Subject({this.name, this.shortName, this.id});
+  Subject({required this.name, this.shortName, required this.id});
   String name;
-  String shortName;
+  String? shortName;
   int id;
-  Subject.fromJson(Map json) {
-    name = json['name'];
-    shortName = json['shortName'];
-    id = json['id'];
-  }
+  Subject.fromJson(Map json)
+      : name = json['name'],
+        shortName = json['shortName'],
+        id = json['id'];
 }
 
 class EventFb {
   final DateTime dateStart;
   final DateTime dateEnd;
   final String text;
+  final TypeEvent type;
 
   EventFb.fromJson(Map json)
-      : dateStart = json["date_start"].toDate(),
-        dateEnd = json["date_end"].toDate(),
-        text = json["name"];
+      : dateStart = json["date_start"].toDate() as DateTime,
+        dateEnd = json["date_end"].toDate() as DateTime,
+        text = json["name"],
+        type = TypeEvent.values[json["type"]];
 }
 
 class Event {
-  Event({this.text, this.color});
+  Event({required this.text, required this.color, required this.type});
   final String text;
   final Color color;
+  final TypeEvent type;
 }
 
+enum TypeEvent { inscripcion_finales, finales }
+
 class SubjectWithUserInfo extends Subject {
-  SubjectWithUserInfo.fromJson(Map json) : super.fromJson(json) {
-    grade = json['grade'];
-    year = json['year'];
-    quarter = json['quarter'];
-    tp = json['tp'] == null ? false : (json['tp'] == 1 ? true : false);
-  }
-  num grade;
-  bool tp;
-  int year;
+  num? grade;
+  bool? tp;
+  bool? doingNow;
+  int? year;
   //Cuatrimestre de cursada: 0 (verano), 1 (1er cuatri), 2 (invierno), 3 (2do cuatri)
-  int quarter;
+  int? quarter;
+
+  SubjectWithUserInfo.fromJson(Map json)
+      : grade = json['grade'],
+        year = json['year'],
+        quarter = json['quarter'],
+        tp = json['tp'] == null ? false : (json['tp'] == 1 ? true : false),
+		doingNow = json['doingNow'] == null ? false : (json['doingNow'] == 1 ? true : false),
+        super.fromJson(json);
 }
 
 class OptativeSubjectWithUserInfo extends SubjectWithUserInfo {
-  OptativeSubjectWithUserInfo.fromJson(Map json) : super.fromJson(json) {
-    points = json['points'];
-    idDegree = json['idDegree'];
-  }
   int points;
   int idDegree;
+  OptativeSubjectWithUserInfo.fromJson(Map json)
+      : points = json['points'],
+        idDegree = json['idDegree'],
+        super.fromJson(json);
 }
 
 class Degree {
-  Degree({this.name, this.shortName, this.id});
   String name;
   String shortName;
   int id;
-  int optativePoints;
+  int? optativePoints;
+  Degree({required this.name, required this.shortName, required this.id});
 
-  Degree.fromJson(Map json) {
-    name = json['name'];
-    shortName = json['shortName'];
-    id = json['id'];
-    optativePoints = json['optativePoints'];
-  }
+  Degree.fromJson(Map json)
+      : name = json['name'],
+        shortName = json['shortName'],
+        id = json['id'],
+        optativePoints = json['optativePoints'];
 }
 
 enum Fechas {

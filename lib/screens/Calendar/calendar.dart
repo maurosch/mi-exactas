@@ -1,34 +1,31 @@
 import 'package:flutter/material.dart';
 import '../../models.dart';
-import 'package:plan_estudios/database.dart';
+import 'package:plan_estudios/database/main.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class Calendar extends StatefulWidget {
-  Calendar({Key key}) : super(key: key);
+  Calendar({Key? key}) : super(key: key);
 
   @override
   _CalendarState createState() => _CalendarState();
 }
 
-class _CalendarState extends State<Calendar>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
-  var _calendarController;
+class _CalendarState extends State<Calendar> {
   List<Event> _selectedEvents = [];
-  Map<DateTime, List> _events = Map<DateTime, List>();
+  Map<DateTime, List<Event>> _events = Map<DateTime, List<Event>>();
+  DateTime _focusedDay = DateTime.now();
+  DateTime _selectedDay = DateTime.now();
+  final _firstDay = DateTime.now().subtract(Duration(days: 365));
+  final _lastDay = DateTime.now().add(Duration(days: 365));
 
   @override
   void initState() {
-    _calendarController = CalendarController();
     getData();
     super.initState();
   }
 
   @override
   void dispose() {
-    _calendarController.dispose();
     super.dispose();
   }
 
@@ -43,10 +40,15 @@ class _CalendarState extends State<Calendar>
     });
   }
 
-  void _onDaySelected(DateTime day, List events, List holidays) {
-    setState(() {
-      _selectedEvents = events.length == 0 ? [] : events;
-    });
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    print(selectedDay);
+    if (!isSameDay(_selectedDay, selectedDay)) {
+      setState(() {
+        _focusedDay = focusedDay;
+        _selectedDay = selectedDay;
+        _selectedEvents = _events[removeFormat(selectedDay)] ?? [];
+      });
+    }
   }
 
   Widget _buildEventsMarker(DateTime date, List events) {
@@ -65,42 +67,45 @@ class _CalendarState extends State<Calendar>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Column(children: [
-      _buildTableCalendarWithBuilders(_events),
-      Expanded(child: _buildEventList())
-    ]);
-  }
-
-  Widget _buildTableCalendarWithBuilders(_events) {
-    return TableCalendar(
-      locale: 'es',
-      calendarController: _calendarController,
-      events: _events,
-      startDay: DateTime(DateTime.now().year, 1, 1),
-      endDay: DateTime(DateTime.now().year, 12, 31),
-      initialCalendarFormat: CalendarFormat.month,
-      startingDayOfWeek: StartingDayOfWeek.sunday,
-      availableGestures: AvailableGestures.none,
-      availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-      calendarStyle: CalendarStyle(
-        outsideDaysVisible: false,
-        weekendStyle: TextStyle().copyWith(color: Colors.purple[300]),
-        holidayStyle: TextStyle().copyWith(color: Colors.blue[800]),
-        todayColor: Colors.orange[600],
-      ),
-      daysOfWeekStyle: DaysOfWeekStyle(
-        weekdayStyle: TextStyle().copyWith(color: Colors.white),
-        weekendStyle: TextStyle().copyWith(color: Colors.purple[300]),
-      ),
-      headerStyle: HeaderStyle(
-        centerHeaderTitle: true,
-        formatButtonVisible: false,
-        leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
-        rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
-      ),
-      builders: CalendarBuilders(
-        markersBuilder: (context, date, events, holidays) {
+      TableCalendar<Event>(
+        locale: 'es',
+        eventLoader: (day) => _events[day] ?? [],
+        calendarFormat: CalendarFormat.month,
+        startingDayOfWeek: StartingDayOfWeek.sunday,
+        availableGestures: AvailableGestures.none,
+        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+        calendarStyle: CalendarStyle(
+          outsideDaysVisible: false,
+          weekendTextStyle: TextStyle().copyWith(color: Colors.purple[300]),
+          holidayTextStyle: TextStyle().copyWith(color: Colors.blue[800]),
+          todayDecoration:
+              BoxDecoration(color: Colors.orange[600], shape: BoxShape.circle),
+          selectedDecoration:
+              BoxDecoration(color: Colors.teal[600], shape: BoxShape.circle),
+        ),
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: TextStyle().copyWith(color: Colors.white),
+          weekendStyle: TextStyle().copyWith(color: Colors.purple[300]),
+        ),
+        headerStyle: HeaderStyle(
+          titleCentered: true,
+          formatButtonVisible: false,
+          leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+          rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+        ),
+        /*calendarBuilders: CalendarBuilders(
+            singleMarkerBuilder: (context, date, Event event) {
+          return Container(
+              width: 8.0,
+              height: 8.0,
+              margin: const EdgeInsets.symmetric(horizontal: 0.3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.red,
+              ));
+        }
+            /*markerBuilder: (context, date, events) {
           final children = <Widget>[];
           if (events.isNotEmpty) {
             children.add(
@@ -110,22 +115,17 @@ class _CalendarState extends State<Calendar>
               ),
             );
           }
-
-          if (holidays.isNotEmpty) {
-            children.add(
-              Positioned(
-                right: -2,
-                top: -2,
-                child: _buildHolidaysMarker(),
-              ),
-            );
-          }
-
-          return children;
-        },
+          return children.length == 0 ? null : children[0];
+        },*/
+            ),*/
+        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+        onDaySelected: _onDaySelected,
+        firstDay: _firstDay,
+        lastDay: _lastDay,
+        focusedDay: _selectedDay,
       ),
-      onDaySelected: _onDaySelected,
-    );
+      Expanded(child: _buildEventList())
+    ]);
   }
 
   Widget _buildHolidaysMarker() {

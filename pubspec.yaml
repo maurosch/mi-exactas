@@ -14,12 +14,12 @@ description: Plan de estudios fcen.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.2.2 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^1.2.0
+  sqflite: ^2.0.0+3
   path_provider: ^2.0.1
   firebase_core: ^1.0.1
   #firebase_auth: ^0.14.0+5
@@ -28,15 +28,16 @@ dependencies:
   #firebase_analytics: ^5.0.2
   cupertino_icons: ^0.1.2
   vibration: 1.2.2
-  font_awesome_flutter: 8.5.0
+  font_awesome_flutter: 9.0.0
   html: ^0.14.0+3
   http: ^0.12.0+4
   url_launcher: ^6.0.2
   intro_slider: ^2.2.9
-  intl: ^0.16.1
-  table_calendar: ^2.3.3
-  shared_preferences:
+  intl: ^0.17.0
+  table_calendar: ^3.0.0-nullsafety.1
+  shared_preferences: ^2.0.5
   in_app_review: ^2.0.1
+  flutter_local_notifications: ^5.0.0
 
 dev_dependencies:
   flutter_test:

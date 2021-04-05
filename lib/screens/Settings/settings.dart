@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:plan_estudios/screens/Settings/notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'change_degree.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -7,7 +8,7 @@ import 'package:in_app_review/in_app_review.dart';
 final InAppReview inAppReview = InAppReview.instance;
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key key}) : super(key: key);
+  const SettingsScreen({Key? key}) : super(key: key);
 
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
@@ -26,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: <Widget>[
                       CambioDeCarrera(context, ctx),
                       Divider(),
-                      Notificaciones(),
+                      Notificaciones(context, ctx),
                       Divider(),
                       Valoranos(),
                       Divider(),
@@ -75,6 +76,7 @@ _launchURL(String url) async {
   }
 }
 
+// ignore: non_constant_identifier_names
 Widget CambioDeCarrera(context, ctx) => ListTile(
       leading: Icon(FontAwesomeIcons.penSquare),
       title: Text("Cambiar de carrera"),
@@ -87,11 +89,20 @@ Widget CambioDeCarrera(context, ctx) => ListTile(
       },
     );
 
-Widget Notificaciones() => ListTile(
+// ignore: non_constant_identifier_names
+Widget Notificaciones(context, ctx) => ListTile(
     //TODO: TERMINAR
     leading: Icon(FontAwesomeIcons.solidBell),
-    title: Text("Notificaciones"));
+    title: Text("Notificaciones"),
+    onTap: () => {
+        Navigator.push(context,
+                MaterialPageRoute(builder: (context) => NotificationsSettings()))
+            .then((value) {
+          if (value != null) showSnackBar(ctx, value);
+        })
+      });
 
+// ignore: non_constant_identifier_names
 Widget Valoranos() => ListTile(
     leading: Icon(FontAwesomeIcons.solidStar),
     title: Text("Valoranos"),
@@ -105,6 +116,7 @@ Widget Valoranos() => ListTile(
             }
         });
 
+// ignore: non_constant_identifier_names
 Widget Sugerencias(context) => GestureDetector(
     child: ListTile(
         leading: Icon(FontAwesomeIcons.solidHeart),

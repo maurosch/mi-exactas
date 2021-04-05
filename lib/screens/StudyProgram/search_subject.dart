@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:plan_estudios/database.dart';
+import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/models.dart';
 
 class SearchSubjectScreen extends StatefulWidget {
   final int idDegree;
   
-  SearchSubjectScreen({this.idDegree, Key key}) : super(key: key);
+  SearchSubjectScreen({required this.idDegree, Key? key}) : super(key: key);
 
   @override
   _SearchSubjectScreenState createState() => _SearchSubjectScreenState();
@@ -15,7 +15,7 @@ class _SearchSubjectScreenState extends State<SearchSubjectScreen> {
   
   var db = DbHelper();
   List<Subject> subjectsList = [];
-  TextEditingController _controller;
+  late TextEditingController _controller;
 
   void initState() {
     super.initState();

@@ -1,11 +1,12 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:path/path.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'models.dart';
+import '../main.dart';
+import '../models.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'initialize.dart';
 
 // CorrelativesSubjects
 // DegreeSubjects
@@ -19,8 +20,7 @@ import 'models.dart';
 
 class DbHelper {
   static final DbHelper _dbHelper = DbHelper._internal();
-  static final DBVersion = 1;
-  static Database _db;
+  static Database? _db;
 
   DbHelper._internal();
   factory DbHelper() {
@@ -30,108 +30,7 @@ class DbHelper {
     if (_db == null) {
       _db = await initializeDB();
     }
-    return _db;
-  }
-
-  Future<Database> initializeDB() async {
-    var dbName = "plan_estudios.db";
-    var databasesPath = await getDatabasesPath();
-    var path = join(databasesPath, dbName);
-
-    // Check if the database exists
-    var exists = await databaseExists(path);
-
-    if (!exists) {
-      // Should happen only the first time you launch your application
-      print("Creating new copy from asset");
-
-      // Make sure the parent directory exists
-      try {
-        await Directory(dirname(path)).create(recursive: true);
-      } catch (_) {}
-
-      // Copy from asset
-      ByteData data = await rootBundle.load(join("assets", dbName));
-      List<int> bytes =
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-
-      // Write and flush the bytes written
-      await File(path).writeAsBytes(bytes, flush: true);
-    } else {
-      print("Opening existing database");
-    }
-    // open the database
-    return await openDatabase(path, version: 1, onUpgrade: _onUpgrade);
-    //return await openDatabase(path, version: DBVersion, onCreate: _onCreate);
-  }
-
-  _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    print('Actualizando db de ' +
-        oldVersion.toString() +
-        ' a ' +
-        newVersion.toString());
-    var dbName = "plan_estudios.db";
-    var databasesPath = await getDatabasesPath();
-    var path = join(databasesPath, dbName);
-
-    try {
-      await Directory(dirname(path)).create(recursive: true);
-    } catch (_) {}
-
-    ByteData data = await rootBundle.load(join("assets", dbName));
-    List<int> bytes =
-        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-
-    await File(path).writeAsBytes(bytes, flush: true);
-
-    await db.rawDelete('DELETE FROM Subjects');
-    await db.rawDelete('DELETE FROM Degrees');
-    await db.rawDelete('DELETE FROM CorrelativesSubjects');
-    await db.rawDelete('DELETE FROM CorrelativesSubjects');
-
-    Database _dbNew = await openDatabase(path, readOnly: true);
-    var collection =
-        await _dbNew.query('Subjects', columns: ['id', 'name', 'shortName']);
-    var batch = db.batch();
-    for (var x in collection) {
-      batch.insert('Subjects',
-          {'id': x['id'], 'name': x['name'], 'shortName': x['shortName']});
-    }
-
-    collection = await _dbNew.query('Degrees',
-        columns: ['id', 'name', 'shortName', 'optativePoints']);
-    for (var x in collection) {
-      batch.insert('Degrees', {
-        'id': x['id'],
-        'name': x['name'],
-        'shortName': x['shortName'],
-        'optativePoints': x['optativePoints']
-      });
-    }
-
-    collection = await _dbNew
-        .query('DegreeSubjects', columns: ['id', 'idDegree', 'idSubject']);
-    for (var x in collection) {
-      batch.insert('DegreeSubjects', {
-        'id': x['id'],
-        'idDegree': x['idDegree'],
-        'idSubject': x['idSubject']
-      });
-    }
-
-    collection = await _dbNew.query('CorrelativesSubjects',
-        columns: ['id', 'idSubject', 'idCorrelative']);
-    for (var x in collection) {
-      batch.insert('CorrelativesSubjects', {
-        'id': x['id'],
-        'idSubject': x['idSubject'],
-        'idCorrelative': x['idCorrelative']
-      });
-    }
-
-    await batch.commit(noResult: true);
-    await _dbNew.close();
-    await db.setVersion(newVersion);
+    return _db!;
   }
 
   Future<List<Map>> getDegreesDoing() async {
@@ -173,7 +72,7 @@ class DbHelper {
 
   Future<List<SubjectWithUserInfo>> getInfoSubjects(int idDegree) async {
     return (await (await db).rawQuery('''
-          SELECT Subjects.id, name, tp, grade, year, quarter, shortName FROM DegreeSubjects 
+          SELECT Subjects.id, name, tp, doingNow, grade, year, quarter, shortName FROM DegreeSubjects 
           LEFT JOIN DoneSubjects ON DoneSubjects.id = DegreeSubjects.idSubject 
           LEFT JOIN Subjects ON Subjects.id = DegreeSubjects.idSubject 
           WHERE DegreeSubjects.idDegree = $idDegree'''))
@@ -210,9 +109,9 @@ class DbHelper {
         .toList();
   }
 
-  Future<SubjectWithUserInfo> getSubjectInfoById(int id) async {
+  Future<SubjectWithUserInfo?> getSubjectInfoById(int id) async {
     List<Map> data = (await (await db).rawQuery('''
-        SELECT name, tp, grade, year, quarter, shortName, Subjects.id FROM Subjects 
+        SELECT name, tp, grade, year, quarter, shortName, Subjects.id, doingNow FROM Subjects 
         LEFT JOIN DoneSubjects ON DoneSubjects.id = Subjects.id
         WHERE Subjects.id = $id'''));
     if (data.isEmpty)
@@ -236,7 +135,7 @@ class DbHelper {
             ],
             where: 'id = $id'))
         .map((x) => OptativeSubjectWithUserInfo.fromJson(x))
-        ?.first;
+        .first;
   }
 
   Future<int> deleteOptativeSubject(int id) async {
@@ -251,19 +150,21 @@ class DbHelper {
     if (checkExist.length == 0)
       await dbAux.insert('DoneSubjects', {
         'id': data.id,
-        'tp': data.tp ? 1 : 0,
+        'tp': data.tp == true ? 1 : 0,
         'grade': data.grade,
         'year': data.year,
-        'quarter': data.quarter
+        'quarter': data.quarter,
+        'doingNow': data.doingNow == true ? 1 : 0
       });
     else
       await dbAux.update(
           'DoneSubjects',
           {
-            'tp': data.tp ? 1 : 0,
+            'tp': data.tp == true ? 1 : 0,
             'grade': data.grade,
             'year': data.year,
-            'quarter': data.quarter
+            'quarter': data.quarter,
+            'doingNow': data.doingNow == true ? 1 : 0
           },
           where: 'id = ${data.id}');
 
@@ -277,23 +178,25 @@ class DbHelper {
     if (checkExist.length == 0)
       await dbAux.insert('OptativeSubjects', {
         'id': data.id,
-        'tp': data.tp ? 1 : 0,
+        'tp': data.tp == true ? 1 : 0,
         'grade': data.grade,
         'year': data.year,
         'quarter': data.quarter,
         'points': data.points,
-        'idDegree': data.idDegree
+        'idDegree': data.idDegree,
+        'name': data.name
       });
     else
       await dbAux.update(
           'OptativeSubjects',
           {
-            'tp': data.tp ? 1 : 0,
+            'tp': data.tp == true ? 1 : 0,
             'grade': data.grade,
             'year': data.year,
             'quarter': data.quarter,
             'points': data.points,
-            'idDegree': data.idDegree
+            'idDegree': data.idDegree,
+            'name': data.name
           },
           where: 'id = ${data.id}');
 
@@ -331,19 +234,56 @@ class DbHelper {
     final data =
         (await firestore.collection('events').get()) //TODO: Catch error
             .docs
-            .map((v) => EventFb.fromJson(v.data()))
-            .toList(); //TODO: SOLO OBTENER DE ESTE ANIO?
+            .map((v) => EventFb.fromJson(v.data()!))
+            .toList();
 
     for (var i in data) {
-      var event = Event(text: i.text, color: Colors.green[400]);
-      DateTime aux = i.dateStart.subtract(Duration(days: 1));
+      var event = Event(text: i.text, color: Colors.green[400]!, type: i.type);
+      DateTime aux = removeFormat(i.dateStart).subtract(Duration(days: 1));
       do {
         aux = aux.add(Duration(days: 1));
-        if (response[i.dateEnd] == null)
-          response[aux] = [event];
+        if (response[removeFormat(i.dateEnd)] == null)
+          response[removeFormat(aux)] = [event];
         else
-          response[aux].add(event);
+          response[removeFormat(aux)]!.add(event);
       } while (i.dateEnd.day != aux.day || i.dateEnd.month != aux.month);
+    }
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool finalesNotifications = prefs.getBool('finalesNotifications') ?? false;
+    //await prefs.setBool('finalesNotifications', counter);
+    if (finalesNotifications) {
+      final Map<String, bool> mapaNotificacionesPendientes =
+          new Map<String, bool>();
+      final List<PendingNotificationRequest> pendingNotificationRequests =
+          await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+      pendingNotificationRequests.forEach((element) {
+        String index = element.payload!;
+        mapaNotificacionesPendientes[index] = true;
+      });
+
+      for (var i in data) {
+        if (i.type == TypeEvent.inscripcion_finales) {
+          if (mapaNotificacionesPendientes[
+                  i.dateStart.toString() + i.type.toString()] !=
+              true) {
+            await flutterLocalNotificationsPlugin.zonedSchedule(
+                0,
+                'scheduled title',
+                'scheduled body',
+                tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+                const NotificationDetails(
+                    android: AndroidNotificationDetails('your channel id',
+                        'your channel name', 'your channel description')),
+                androidAllowWhileIdle: true,
+                uiLocalNotificationDateInterpretation:
+                    UILocalNotificationDateInterpretation.absoluteTime,
+                payload: i.dateStart.toString() + i.type.toString());
+            mapaNotificacionesPendientes[
+                i.dateStart.toString() + i.type.toString()] = true;
+          }
+        }
+      }
     }
 
     return response;
@@ -356,3 +296,5 @@ class DbHelper {
     ''')).map((e) => Subject.fromJson(e)).toList();
   }
 }
+
+DateTime removeFormat(DateTime v) => DateTime(v.year, v.month, v.day);

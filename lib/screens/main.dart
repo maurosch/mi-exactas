@@ -3,27 +3,27 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:plan_estudios/screens/Calendar/index.dart';
 import 'package:plan_estudios/screens/Newcomers/select_degree.dart';
 import 'package:plan_estudios/screens/Settings/settings.dart';
-import 'package:plan_estudios/database.dart';
+import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/screens/StudyProgram/index.dart';
 import 'package:plan_estudios/globals.dart' as globals;
 
 class MainScreen extends StatefulWidget {
-  MainScreen({Key key}) : super(key: key);
+  MainScreen({Key? key}) : super(key: key);
 
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
-  List<int> degreesDoing;
+  List<int>? degreesDoing;
   int _page = 0;
 
-  TabController _tabController;
+  late TabController _tabController;
   @override
   void initState(){
     _tabController = new TabController(length: 2, vsync: this);
-    _tabController.animation.addListener(() { 
-      var value = _tabController.animation.value.round();
+    _tabController.animation!.addListener(() { 
+      var value = _tabController.animation!.value.round();
       if(value != _page)
         setState(() {_page = value;}); 
     });
@@ -44,10 +44,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   var _studyProgramScreen, _calendarScreen;
 
-  Widget studyProgramScreenCache() {
+  Widget studyProgramScreenCache(List<int> _degreesDoing) {
     if(_studyProgramScreen == null) {
       setState(() {
-        _studyProgramScreen = StudyProgramScreen(degreeIds: degreesDoing);
+        _studyProgramScreen = StudyProgramScreen(degreeIds: _degreesDoing);
       });
     }
     return _studyProgramScreen;
@@ -66,7 +66,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     if(degreesDoing == null) 
       return Container();
     
-    if(degreesDoing.length == 0) 
+    if(degreesDoing!.length == 0) 
       return SelectDegreeScreen();
     
     return Scaffold(
@@ -94,7 +94,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         body: TabBarView(
           controller: _tabController,
           children: [
-            studyProgramScreenCache(),
+            studyProgramScreenCache(degreesDoing!),
             calendarScreenCache()
             
           ],
@@ -118,11 +118,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             ),*/
             BottomNavigationBarItem(
               icon: Icon(Icons.school),
-              title: Text('Materias'),
+              label: 'Materias',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.date_range),
-              title: Text('Calendario'),
+              label: 'Calendario',
             ),
           ],
         ),

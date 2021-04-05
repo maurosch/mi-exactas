@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:plan_estudios/models.dart';
+import 'package:plan_estudios/screens/StudyProgram/util.dart';
 
 class SubjectTile extends StatelessWidget {
   SubjectTile(
-      {this.idSubject,
-      this.name,
-      this.grade,
-      this.tp,
-      this.canBeAproved,
-      this.correlatives});
-  final String name;
-  final num grade;
-  final bool tp;
+      {required this.subject,
+      required this.canBeAproved,
+      required this.correlatives});
   final bool canBeAproved;
-  final int idSubject;
   final List<String> correlatives;
+  final SubjectWithUserInfo subject;
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +34,7 @@ class SubjectTile extends StatelessWidget {
                           ],
                           colors: [
                             Colors.transparent,
-                            grade == null
-                                ? (tp == true
-                                    ? Colors.purple[600]
-                                    : Colors.transparent)
-                                : Colors.teal
+                            getColorSubject(subject),
                           ]),
                     )
                   : BoxDecoration(
@@ -56,7 +48,7 @@ class SubjectTile extends StatelessWidget {
                       flex: 3,
                       fit: FlexFit.tight,
                       child: Text(
-                        "$name",
+                        subject.name,
                         style: TextStyle(
                           fontSize: 18.0,
                         ),
@@ -66,8 +58,9 @@ class SubjectTile extends StatelessWidget {
                     flex: 1,
                     child: _Trailing(
                       canBeAproved: canBeAproved,
-                      tp: tp,
-                      grade: grade,
+                      doingNow: subject.doingNow,
+                      tp: subject.tp,
+                      grade: subject.grade,
                       correlatives: correlatives,
                     ),
                   )
@@ -78,9 +71,15 @@ class SubjectTile extends StatelessWidget {
 }
 
 class _Trailing extends StatelessWidget {
-  _Trailing({this.canBeAproved, this.tp, this.grade, this.correlatives});
-  final num grade;
-  final bool tp;
+  _Trailing(
+      {required this.canBeAproved,
+      this.tp,
+      this.grade,
+      required this.correlatives,
+      this.doingNow});
+  final num? grade;
+  final bool? tp;
+  final bool? doingNow;
   final bool canBeAproved;
   final List<String> correlatives;
 
@@ -90,7 +89,19 @@ class _Trailing extends StatelessWidget {
 
   @override
   Widget build(BuildContext ctx) {
-    Widget result;
+    if (doingNow == true) {
+      return Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
+        Container(
+            margin: EdgeInsets.only(right: 2),
+            child: Text(
+              "CURSO",
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: 18.0),
+            )),
+        SizedBox(width: 2),
+        Icon(FontAwesomeIcons.chevronRight),
+      ]);
+    }
     if (canBeAproved) {
       if (grade == null) {
         if (tp == true)
@@ -124,7 +135,7 @@ class _Trailing extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  removeDecimalZeroFormat(grade),
+                  removeDecimalZeroFormat(grade!),
                   style: TextStyle(fontSize: 20.0),
                 )
               ]),

@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:plan_estudios/database.dart';
+import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/models.dart';
 import 'package:flutter/services.dart';
 
 import 'edit_subject.dart';
 import 'edit_subject_optative.dart';
 import 'header_card.dart';
-import 'search_subject.dart';
 import 'subject_tile.dart';
 
 class StudyProgramScreen extends StatefulWidget {
   final List<int> degreeIds;
 
-  StudyProgramScreen({Key key, this.degreeIds}) : super(key: key);
+  StudyProgramScreen({Key? key, required this.degreeIds}) : super(key: key);
 
   @override
   _StudyProgramScreenState createState() => _StudyProgramScreenState();
@@ -20,15 +19,15 @@ class StudyProgramScreen extends StatefulWidget {
 
 class _StudyProgramScreenState extends State<StudyProgramScreen>
     with AutomaticKeepAliveClientMixin {
-  List<SubjectWithUserInfo> infoSubjects;
-  List<OptativeSubjectWithUserInfo> infoOptatives;
-  Map<int, List<Subject>> correlativesToDo;
-  num averageDegree,
+  List<SubjectWithUserInfo>? infoSubjects;
+  List<OptativeSubjectWithUserInfo>? infoOptatives;
+  Map<int, List<Subject>>? correlativesToDo;
+  late num averageDegree,
       amountSubjects,
       countPassed,
       passedWithoutFinal,
       optativePoints;
-  Degree degree;
+  late Degree degree;
   var db = DbHelper();
 
   @override
@@ -56,7 +55,7 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
     num sumDegree = 0, quantity = 0, quantityOnlyTp = 0;
     for (var x in infoSubjects) {
       if (x.grade != null) {
-        sumDegree += x.grade;
+        sumDegree += x.grade!;
         quantity += 1;
       } else {
         if (x.tp != null && x.tp == true) quantityOnlyTp += 1;
@@ -84,18 +83,28 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
     });
   }
 
+  void addOptative() {
+    db.insertOptativeSubject(
+        Subject(
+          id: 1,
+          name: "Materia Optativa",
+        ),
+        widget.degreeIds.first);
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (infoSubjects == null) return Container();
     return ListView.builder(
-        itemCount: infoSubjects.length + 1 + infoOptatives.length + 1,
+        itemCount: infoSubjects!.length + 1 + infoOptatives!.length + 1,
         itemBuilder: (context, i) {
           final int subjectsIndex = i - 1;
-          final int optativesIndex = i - infoSubjects.length - 1;
+          final int optativesIndex = i - infoSubjects!.length - 1;
           final int headerCardIndex = 0;
-          final int optativesStartIndex = infoSubjects.length + 1;
+          final int optativesStartIndex = infoSubjects!.length + 1;
           final int addOptativeButtonIndex =
-              infoSubjects.length + 1 + infoOptatives.length;
+              infoSubjects!.length + 1 + infoOptatives!.length;
 
           if (i == headerCardIndex) {
             return HeaderCard(
@@ -105,28 +114,19 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
                 passedWithoutFinal: passedWithoutFinal,
                 title: degree.name,
                 optativePoints: optativePoints,
-                amountOptativePoints: degree.optativePoints);
+                amountOptativePoints: degree.optativePoints!);
           }
           if (i == addOptativeButtonIndex) {
-            return Container(
-                margin: EdgeInsets.only(bottom: 16, left: 26, right: 26),
-                child: RaisedButton(
-                    onPressed: () {
-                      Navigator.of(context)
-                          .push(MaterialPageRoute(
-                              builder: (context) => SearchSubjectScreen(
-                                  idDegree: widget.degreeIds.first)))
-                          .then((_) => getData());
-                    },
-                    child: Text("Agregar Optativa")));
+            return ButtonAddOptativeSubject(addOptative: addOptative);
           }
 
-          var subject, canBeAproved;
+          SubjectWithUserInfo subject;
+          bool canBeAproved;
           if (i < optativesStartIndex) {
-            subject = infoSubjects[subjectsIndex];
-            canBeAproved = correlativesToDo[subject.id].length == 0;
+            subject = infoSubjects![subjectsIndex];
+            canBeAproved = correlativesToDo![subject.id]!.length == 0;
           } else {
-            subject = infoOptatives[optativesIndex];
+            subject = infoOptatives![optativesIndex];
             canBeAproved = true;
           }
 
@@ -157,14 +157,10 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
                     HapticFeedback.vibrate();
                   },
             child: SubjectTile(
-              name:
-                  subject.shortName != null ? subject.shortName : subject.name,
-              idSubject: subject.id,
-              tp: subject.tp ? true : false,
-              grade: subject.grade,
+              subject: subject,
               canBeAproved: canBeAproved,
-              correlatives: correlativesToDo[subject.id]
-                  .map((x) => x.shortName != null ? x.shortName : x.name)
+              correlatives: correlativesToDo![subject.id]!
+                  .map((x) => x.shortName ?? x.name)
                   .toList(),
             ),
           );
@@ -173,4 +169,18 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class ButtonAddOptativeSubject extends StatelessWidget {
+  ButtonAddOptativeSubject({Key? key, required this.addOptative})
+      : super(key: key);
+  final void Function() addOptative;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        margin: EdgeInsets.only(bottom: 16, left: 26, right: 26),
+        child: ElevatedButton(
+            onPressed: addOptative, child: Text("Agregar Optativa")));
+  }
 }

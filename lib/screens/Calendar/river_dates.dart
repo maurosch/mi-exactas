@@ -27,7 +27,7 @@ import 'package:flutter/material.dart';
       );
   },
 ),*/
-
+/*
 Future<SportGame> getData() async {
   http.Response response =
       await http.get('https://resultados.lapaginamillonaria.com/futbol/');
@@ -227,4 +227,4 @@ class Team extends StatelessWidget {
           Text(teamName, textAlign: TextAlign.center)
         ]);
   }
-}
+}*/
