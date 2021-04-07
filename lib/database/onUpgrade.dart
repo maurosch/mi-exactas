@@ -77,5 +77,6 @@ void fundamentalUpgradeChanges(Database db, int oldVersion) {
   //Ir poniendo las modificaciones de cada actualizacion a la base de datos
   if (oldVersion <= 1) {
     db.execute("ALTER TABLE DoneSubjects ADD COLUMN doingNow INTEGER;");
+    db.execute("ALTER TABLE OptativeSubjects ADD COLUMN doingNow INTEGER;");
   }
 }

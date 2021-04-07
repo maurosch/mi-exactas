@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:plan_estudios/screens/Settings/notifications.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:plan_estudios/util.dart';
+import '../../globals.dart';
+import '../../util.dart';
 import 'change_degree.dart';
 import 'package:in_app_review/in_app_review.dart';
 
@@ -38,11 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 void showSnackBar(context, degreeName) {
-  final SnackBar snackBar = SnackBar(
-      content: Text("Carrera cambiada a $degreeName"),
-      behavior: SnackBarBehavior.floating,
-      duration: Duration(milliseconds: 2000));
-  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  notificationMessage(context, "Carrera cambiada a $degreeName");
 }
 
 Future<void> alertSuggestion(context) async {
@@ -56,24 +54,16 @@ Future<void> alertSuggestion(context) async {
       actions: [
         TextButton(
           child: Text("Link Repo"),
-          onPressed: () => _launchURL('https://github.com/maurosch/mi-exactas'),
+          onPressed: () => launchURL(GITHUB_PAGE),
         ),
         TextButton(
           child: Text("Mandar mail"),
-          onPressed: () => _launchURL(
+          onPressed: () => launchURL(
               'mailto:mschiavinato@dc.uba.ar?subject=Sugerencia Mi-Exactas'),
         )
       ],
     ),
   );
-}
-
-_launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
-  }
 }
 
 // ignore: non_constant_identifier_names
@@ -95,12 +85,13 @@ Widget Notificaciones(context, ctx) => ListTile(
     leading: Icon(FontAwesomeIcons.solidBell),
     title: Text("Notificaciones"),
     onTap: () => {
-        Navigator.push(context,
-                MaterialPageRoute(builder: (context) => NotificationsSettings()))
-            .then((value) {
-          if (value != null) showSnackBar(ctx, value);
-        })
-      });
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => NotificationsSettings())).then((value) {
+            if (value != null) showSnackBar(ctx, value);
+          })
+        });
 
 // ignore: non_constant_identifier_names
 Widget Valoranos() => ListTile(
@@ -110,10 +101,7 @@ Widget Valoranos() => ListTile(
           if (await inAppReview.isAvailable())
             {inAppReview.requestReview()}
           else
-            {
-              _launchURL(
-                  "https://play.google.com/store/apps/details?id=com.plan_estudios_exactas.app")
-            }
+            {launchURL(PLAYSTORE_PAGE)}
         });
 
 // ignore: non_constant_identifier_names

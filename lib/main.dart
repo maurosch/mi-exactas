@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -40,6 +41,22 @@ class App extends StatelessWidget {
 
         // Once complete, show your application
         if (snapshot.connectionState == ConnectionState.done) {
+          FirebaseMessaging.instance.getToken();
+          FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+            RemoteNotification? notification = message.notification;
+            AndroidNotification? android = message.notification?.android;
+
+            if (notification != null && android != null) {
+              flutterLocalNotificationsPlugin.show(
+                  notification.hashCode,
+                  notification.title,
+                  notification.body,
+                  NotificationDetails(
+                    android: AndroidNotificationDetails(
+                        '0', "Finales", "Alertar dos semanas antes del final"),
+                  ));
+            }
+          });
           return MyApp();
         }
 

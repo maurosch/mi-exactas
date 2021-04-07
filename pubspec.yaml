@@ -24,6 +24,7 @@ dependencies:
   firebase_core: ^1.0.1
   #firebase_auth: ^0.14.0+5
   cloud_firestore: ^1.0.1
+  firebase_messaging: ^9.1.1
   #firebase_database: ^3.0.4
   #firebase_analytics: ^5.0.2
   cupertino_icons: ^0.1.2
@@ -34,7 +35,7 @@ dependencies:
   url_launcher: ^6.0.2
   intro_slider: ^2.2.9
   intl: ^0.17.0
-  table_calendar: ^3.0.0-nullsafety.1
+  table_calendar: ^3.0.0
   shared_preferences: ^2.0.5
   in_app_review: ^2.0.1
   flutter_local_notifications: ^5.0.0

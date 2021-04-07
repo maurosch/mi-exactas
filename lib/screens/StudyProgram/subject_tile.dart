@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:plan_estudios/models.dart';
-import 'package:plan_estudios/screens/StudyProgram/util.dart';
+import 'package:plan_estudios/util.dart';
 
 class SubjectTile extends StatelessWidget {
   SubjectTile(

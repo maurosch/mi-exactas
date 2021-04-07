@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/models.dart';
-import 'package:plan_estudios/screens/StudyProgram/util.dart';
+import 'package:plan_estudios/util.dart';
 import 'edit_subject_optative.dart';
 
 class SubjectEditScreen extends StatefulWidget {
@@ -96,23 +96,26 @@ class SubjectEditScreenState extends State<SubjectEditScreen> {
                       TitleSubject(name: _data!.name),
                       SizedBox(height: 20),
                       CheckboxListTile(
-                        value: _data!.doingNow,
+                        value: _data!.doingNow == true,
                         activeColor: Colors.blueAccent,
                         controlAffinity: ListTileControlAffinity.leading,
                         onChanged: (bool? value) {
                           setState(() {
                             _data!.doingNow = value;
+                            _data!.tp = null;
+                            _data!.grade = null;
                           });
                         },
                         title: Text("Cursando"),
                       ),
                       CheckboxListTile(
-                        value: _data!.tp,
+                        value: _data!.tp == true,
                         activeColor: Colors.blueAccent,
                         controlAffinity: ListTileControlAffinity.leading,
                         onChanged: (bool? value) {
                           setState(() {
                             _data!.tp = value;
+                            _data!.doingNow = null;
                             _data!.grade = null;
                           });
                         },

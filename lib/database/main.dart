@@ -1,8 +1,11 @@
+import 'dart:collection';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../main.dart';
 import '../models.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -34,8 +37,9 @@ class DbHelper {
   }
 
   Future<List<Map>> getDegreesDoing() async {
-    return (await (await db).rawQuery(
-        'SELECT idDegree, position, name FROM DegreesDoing LEFT JOIN Degrees ON Degrees.id = DegreesDoing.idDegree'));
+    return (await (await db).query(
+        'DegreesDoing LEFT JOIN Degrees ON Degrees.id = DegreesDoing.idDegree',
+        columns: ['idDegree', 'position', 'name']));
   }
 
   Future<List<int>> getDegreesDoingIds() async {
@@ -53,14 +57,6 @@ class DbHelper {
         .first;
   }
 
-  void insertSubjectDone(int id, bool tp, num grade, DateTime date) async {
-    int dateMilis = date.millisecondsSinceEpoch;
-    int tpInt = tp as int;
-    int id1 = await (await db).rawInsert(
-        'INSERT INTO DoneSubjects(id, tp, grade, year, quarter) VALUES($id, $tpInt, $grade, $dateMilis)');
-    print('inserted1: $id1');
-  }
-
   void insertOptativeSubject(Subject model, int idDegree) async {
     await (await db).insert('OptativeSubjects', {
       'points': 0,
@@ -71,11 +67,21 @@ class DbHelper {
   }
 
   Future<List<SubjectWithUserInfo>> getInfoSubjects(int idDegree) async {
-    return (await (await db).rawQuery('''
-          SELECT Subjects.id, name, tp, doingNow, grade, year, quarter, shortName FROM DegreeSubjects 
-          LEFT JOIN DoneSubjects ON DoneSubjects.id = DegreeSubjects.idSubject 
-          LEFT JOIN Subjects ON Subjects.id = DegreeSubjects.idSubject 
-          WHERE DegreeSubjects.idDegree = $idDegree'''))
+    return (await (await db).query('''
+			DegreeSubjects 
+          	LEFT JOIN DoneSubjects ON DoneSubjects.id = DegreeSubjects.idSubject 
+          	LEFT JOIN Subjects ON Subjects.id = DegreeSubjects.idSubject''',
+            columns: [
+          'Subjects.id',
+          'name',
+          'tp',
+          'doingNow',
+          'grade',
+          'year',
+          'quarter',
+          'shortName'
+        ],
+            where: 'DegreeSubjects.idDegree = $idDegree'))
         .map((x) => SubjectWithUserInfo.fromJson(x))
         .toList();
   }
@@ -92,7 +98,8 @@ class DbHelper {
               'year',
               'quarter',
               'shortName',
-              'points'
+              'points',
+              'doingNow'
             ],
             where: 'idDegree = $idDegree'))
         .map((x) => OptativeSubjectWithUserInfo.fromJson(x))
@@ -100,20 +107,31 @@ class DbHelper {
   }
 
   Future<List<Subject>> getCorrelativesToApprove(int id) async {
-    return (await (await db).rawQuery('''
-        SELECT name, Subjects.id AS id, shortName FROM CorrelativesSubjects 
+    return (await (await db).query('''CorrelativesSubjects 
         INNER JOIN Subjects ON CorrelativesSubjects.idCorrelative = Subjects.id
-        LEFT JOIN DoneSubjects ON DoneSubjects.id = CorrelativesSubjects.idCorrelative
-        WHERE CorrelativesSubjects.idSubject = $id AND (DoneSubjects.tp IS NULL OR DoneSubjects.tp = 0) '''))
+        LEFT JOIN DoneSubjects ON DoneSubjects.id = CorrelativesSubjects.idCorrelative''',
+            columns: ['name', 'Subjects.id AS id', 'shortName'],
+            where:
+                'CorrelativesSubjects.idSubject = $id AND (DoneSubjects.tp IS NULL OR DoneSubjects.tp = 0)'))
         .map((e) => Subject.fromJson(e))
         .toList();
   }
 
   Future<SubjectWithUserInfo?> getSubjectInfoById(int id) async {
-    List<Map> data = (await (await db).rawQuery('''
-        SELECT name, tp, grade, year, quarter, shortName, Subjects.id, doingNow FROM Subjects 
-        LEFT JOIN DoneSubjects ON DoneSubjects.id = Subjects.id
-        WHERE Subjects.id = $id'''));
+    List<Map> data = (await (await db).query(
+        'Subjects LEFT JOIN DoneSubjects ON DoneSubjects.id = Subjects.id',
+        columns: [
+          'name',
+          'tp',
+          'grade',
+          'year',
+          'quarter',
+          'shortName',
+          'Subjects.id',
+          'doingNow'
+        ],
+        where: 'Subjects.id = $id'));
+
     if (data.isEmpty)
       return null;
     else
@@ -131,7 +149,8 @@ class DbHelper {
               'tp',
               'grade',
               'year',
-              'quarter'
+              'quarter',
+              'doingNow'
             ],
             where: 'id = $id'))
         .map((x) => OptativeSubjectWithUserInfo.fromJson(x))
@@ -184,7 +203,8 @@ class DbHelper {
         'quarter': data.quarter,
         'points': data.points,
         'idDegree': data.idDegree,
-        'name': data.name
+        'name': data.name,
+        'doingNow': data.doingNow == true ? 1 : 0
       });
     else
       await dbAux.update(
@@ -196,7 +216,8 @@ class DbHelper {
             'quarter': data.quarter,
             'points': data.points,
             'idDegree': data.idDegree,
-            'name': data.name
+            'name': data.name,
+            'doingNow': data.doingNow == true ? 1 : 0
           },
           where: 'id = ${data.id}');
 
@@ -204,11 +225,10 @@ class DbHelper {
   }
 
   Future<List<Subject>> getCorrelatives(int id) async {
-    List<Map> data = await (await db).rawQuery('''
-        SELECT idCorrelative as id, name, shortName FROM CorrelativesSubjects
-        LEFT JOIN Subjects ON Subjects.id = CorrelativesSubjects.idCorrelative
-        WHERE idSubject = $id
-        ''');
+    List<Map> data = await (await db).query('''CorrelativesSubjects
+        LEFT JOIN Subjects ON Subjects.id = CorrelativesSubjects.idCorrelative''',
+        columns: ['idCorrelative as id', 'name', 'shortName'],
+        where: 'idSubject = $id');
 
     return data.map((x) => Subject.fromJson(x)).toList();
   }
@@ -227,67 +247,7 @@ class DbHelper {
     return true;
   }
 
-  Future<Map<DateTime, List<Event>>> getEvents() async {
-    Map<DateTime, List<Event>> response = Map<DateTime, List<Event>>();
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    final data =
-        (await firestore.collection('events').get()) //TODO: Catch error
-            .docs
-            .map((v) => EventFb.fromJson(v.data()!))
-            .toList();
-
-    for (var i in data) {
-      var event = Event(text: i.text, color: Colors.green[400]!, type: i.type);
-      DateTime aux = removeFormat(i.dateStart).subtract(Duration(days: 1));
-      do {
-        aux = aux.add(Duration(days: 1));
-        if (response[removeFormat(i.dateEnd)] == null)
-          response[removeFormat(aux)] = [event];
-        else
-          response[removeFormat(aux)]!.add(event);
-      } while (i.dateEnd.day != aux.day || i.dateEnd.month != aux.month);
-    }
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool finalesNotifications = prefs.getBool('finalesNotifications') ?? false;
-    //await prefs.setBool('finalesNotifications', counter);
-    if (finalesNotifications) {
-      final Map<String, bool> mapaNotificacionesPendientes =
-          new Map<String, bool>();
-      final List<PendingNotificationRequest> pendingNotificationRequests =
-          await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-      pendingNotificationRequests.forEach((element) {
-        String index = element.payload!;
-        mapaNotificacionesPendientes[index] = true;
-      });
-
-      for (var i in data) {
-        if (i.type == TypeEvent.inscripcion_finales) {
-          if (mapaNotificacionesPendientes[
-                  i.dateStart.toString() + i.type.toString()] !=
-              true) {
-            await flutterLocalNotificationsPlugin.zonedSchedule(
-                0,
-                'scheduled title',
-                'scheduled body',
-                tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
-                const NotificationDetails(
-                    android: AndroidNotificationDetails('your channel id',
-                        'your channel name', 'your channel description')),
-                androidAllowWhileIdle: true,
-                uiLocalNotificationDateInterpretation:
-                    UILocalNotificationDateInterpretation.absoluteTime,
-                payload: i.dateStart.toString() + i.type.toString());
-            mapaNotificacionesPendientes[
-                i.dateStart.toString() + i.type.toString()] = true;
-          }
-        }
-      }
-    }
-
-    return response;
-  }
+  
 
   Future<List<Subject>> searchSubjects(String v) async {
     if (v == "") return <Subject>[];

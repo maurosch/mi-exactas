@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/models.dart';
-import 'package:plan_estudios/screens/StudyProgram/util.dart';
+import 'package:plan_estudios/util.dart';
 
 class OptativeSubjectEditScreen extends StatefulWidget {
   const OptativeSubjectEditScreen({Key? key, required this.subjectId})
@@ -34,7 +34,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
 
   int cursadaMes = 0;
   String yearDone = DateTime.now().year.toString();
-  late OptativeSubjectWithUserInfo _data;
+  OptativeSubjectWithUserInfo? _data;
 
   @override
   void initState() {
@@ -56,7 +56,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
 
   Future<bool> saveData() async {
     var db = DbHelper();
-    await db.saveOptativeSubjectInfo(_data);
+    await db.saveOptativeSubjectInfo(_data!);
     return true;
   }
 
@@ -80,14 +80,11 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
             title: Text("Editar Materia Optativa")),
         body: Container(
           decoration: BoxDecoration(
-              gradient:
-                  RadialGradient(center: Alignment(0, -1.6), radius: 3, stops: [
-            0.2,
-            0.6
-          ], colors: [
-            getColorSubject(_data),
-            Colors.transparent
-          ])),
+              gradient: RadialGradient(
+                  center: Alignment(0, -1.6),
+                  radius: 3,
+                  stops: [0.2, 0.6],
+                  colors: [getColorSubject(_data!), Colors.transparent])),
           child: Column(
             children: <Widget>[
               SizedBox(height: 100),
@@ -98,23 +95,37 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       TitleSubject(
-                          name: _data.name,
+                          name: _data!.name,
                           notifyParent: (String name) {
                             setState(() {
-                              _data.name = name;
+                              _data!.name = name;
                             });
-                            print(_data.name);
-                            print(_data.shortName);
+                            print(_data!.name);
+                            print(_data!.shortName);
                           }),
                       SizedBox(height: 20),
                       CheckboxListTile(
-                        value: _data.tp,
+                        value: _data!.doingNow == true,
                         activeColor: Colors.blueAccent,
                         controlAffinity: ListTileControlAffinity.leading,
                         onChanged: (bool? value) {
                           setState(() {
-                            _data.tp = value;
-                            _data.grade = null;
+                            _data!.doingNow = value;
+                            _data!.tp = null;
+                            _data!.grade = null;
+                          });
+                        },
+                        title: Text("Cursando"),
+                      ),
+                      CheckboxListTile(
+                        value: _data!.tp == true,
+                        activeColor: Colors.blueAccent,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            _data!.tp = value;
+                            _data!.grade = null;
+                            _data!.doingNow = null;
                           });
                         },
                         title: Text("Trabajos Prácticos Aprobados"),
@@ -124,20 +135,21 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                         Flexible(
                             child: GradeSubjectInput(
                                 disabledHint: 'TP no ap.',
-                                disabled: _data.tp == null || _data.tp == false,
-                                grade: _data.grade,
+                                disabled:
+                                    _data!.tp == null || _data!.tp == false,
+                                grade: _data!.grade,
                                 notifyParent: (int? grade) {
                                   setState(() {
-                                    _data.grade = grade;
+                                    _data!.grade = grade;
                                   });
                                 })),
                         SizedBox(width: 25),
                         Flexible(
                             child: TextFormField(
-                          initialValue: _data.points.toString(),
+                          initialValue: _data!.points.toString(),
                           onChanged: (String value) {
                             setState(() {
-                              _data.points = int.parse(value);
+                              _data!.points = int.parse(value);
                             });
                           },
                           keyboardType: TextInputType.number,
@@ -156,7 +168,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                             decoration:
                                 InputDecoration(labelText: 'Cuatrimestre'),
                             value: cursadas[
-                                _data.quarter != null ? _data.quarter! : 0],
+                                _data!.quarter != null ? _data!.quarter! : 0],
                             items: cursadas.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
@@ -167,7 +179,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                               if (newValue != null) {
                                 final v = cursadas.indexOf(newValue);
                                 setState(() {
-                                  _data.quarter = v != 0 ? v : null;
+                                  _data!.quarter = v != 0 ? v : null;
                                 });
                               }
                             },
@@ -176,8 +188,8 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                           Flexible(
                             child: DropdownButtonFormField<String>(
                               decoration: InputDecoration(labelText: 'Año'),
-                              value: _data.year != null
-                                  ? _data.year.toString()
+                              value: _data!.year != null
+                                  ? _data!.year.toString()
                                   : 'Seleccionar',
                               items: yearsList.map((String value) {
                                 value = value;
@@ -189,7 +201,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                               onChanged: (String? newValue) {
                                 if (newValue != null && newValue != 'Año') {
                                   setState(() {
-                                    _data.year = int.parse(newValue);
+                                    _data!.year = int.parse(newValue);
                                   });
                                 }
                               },
@@ -304,14 +316,10 @@ class TitleSubject extends StatelessWidget {
     return Container(
       //width: 100,
       margin: EdgeInsets.all(10),
-      child: Expanded(
-        //alignment: Alignment.bottomLeft,
-        //fit: BoxFit.scaleDown,
-        child: TextFormField(
-            initialValue: name,
-            decoration: InputDecoration(suffixIcon: Icon(Icons.edit)),
-            onFieldSubmitted: notifyParent),
-      ),
+      child: TextFormField(
+          initialValue: name,
+          decoration: InputDecoration(suffixIcon: Icon(Icons.edit)),
+          onFieldSubmitted: notifyParent),
     );
   }
 }

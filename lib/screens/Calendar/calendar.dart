@@ -1,6 +1,8 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
+import 'package:plan_estudios/database/events.dart';
 import '../../models.dart';
-import 'package:plan_estudios/database/main.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class Calendar extends StatefulWidget {
@@ -12,8 +14,9 @@ class Calendar extends StatefulWidget {
 
 class _CalendarState extends State<Calendar> {
   List<Event> _selectedEvents = [];
-  Map<DateTime, List<Event>> _events = Map<DateTime, List<Event>>();
-  DateTime _focusedDay = DateTime.now();
+  LinkedHashMap<DateTime, List<Event>> _events =
+      LinkedHashMap<DateTime, List<Event>>();
+  //DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   final _firstDay = DateTime.now().subtract(Duration(days: 365));
   final _lastDay = DateTime.now().add(Duration(days: 365));
@@ -30,8 +33,7 @@ class _CalendarState extends State<Calendar> {
   }
 
   getData() async {
-    DbHelper db = DbHelper();
-    var aux = await db.getEvents();
+    var aux = await getEvents();
     print(aux);
     var now = DateTime.now();
     setState(() {
@@ -44,25 +46,11 @@ class _CalendarState extends State<Calendar> {
     print(selectedDay);
     if (!isSameDay(_selectedDay, selectedDay)) {
       setState(() {
-        _focusedDay = focusedDay;
+        //_focusedDay = focusedDay;
         _selectedDay = selectedDay;
-        _selectedEvents = _events[removeFormat(selectedDay)] ?? [];
+        _selectedEvents = _events[selectedDay] ?? [];
       });
     }
-  }
-
-  Widget _buildEventsMarker(DateTime date, List events) {
-    return Row(
-        children: events.map((event) {
-      return Container(
-          width: 8.0,
-          height: 8.0,
-          margin: const EdgeInsets.symmetric(horizontal: 0.3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: event.color,
-          ));
-    }).toList());
   }
 
   @override
@@ -79,6 +67,8 @@ class _CalendarState extends State<Calendar> {
           outsideDaysVisible: false,
           weekendTextStyle: TextStyle().copyWith(color: Colors.purple[300]),
           holidayTextStyle: TextStyle().copyWith(color: Colors.blue[800]),
+          markerDecoration:
+              BoxDecoration(color: Colors.red[600], shape: BoxShape.circle),
           todayDecoration:
               BoxDecoration(color: Colors.orange[600], shape: BoxShape.circle),
           selectedDecoration:
@@ -94,30 +84,6 @@ class _CalendarState extends State<Calendar> {
           leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
           rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
         ),
-        /*calendarBuilders: CalendarBuilders(
-            singleMarkerBuilder: (context, date, Event event) {
-          return Container(
-              width: 8.0,
-              height: 8.0,
-              margin: const EdgeInsets.symmetric(horizontal: 0.3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.red,
-              ));
-        }
-            /*markerBuilder: (context, date, events) {
-          final children = <Widget>[];
-          if (events.isNotEmpty) {
-            children.add(
-              Positioned(
-                bottom: 8,
-                child: _buildEventsMarker(date, events),
-              ),
-            );
-          }
-          return children.length == 0 ? null : children[0];
-        },*/
-            ),*/
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         onDaySelected: _onDaySelected,
         firstDay: _firstDay,
@@ -126,14 +92,6 @@ class _CalendarState extends State<Calendar> {
       ),
       Expanded(child: _buildEventList())
     ]);
-  }
-
-  Widget _buildHolidaysMarker() {
-    return Icon(
-      Icons.add_box,
-      size: 20.0,
-      color: Colors.blueGrey[800],
-    );
   }
 
   Widget _buildEventList() {

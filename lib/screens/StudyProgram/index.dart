@@ -52,13 +52,22 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
     for (SubjectWithUserInfo x in infoSubjects)
       correlativesToDo[x.id] = await db.getCorrelativesToApprove(x.id);
 
-    num sumDegree = 0, quantity = 0, quantityOnlyTp = 0;
+    num sumDegree = 0,
+        quantityDone = 0,
+        quantityOptativesDone = 0,
+        quantityOnlyTp = 0;
     for (var x in infoSubjects) {
       if (x.grade != null) {
         sumDegree += x.grade!;
-        quantity += 1;
+        quantityDone += 1;
       } else {
         if (x.tp != null && x.tp == true) quantityOnlyTp += 1;
+      }
+    }
+    for (var x in infoOptatives) {
+      if (x.grade != null) {
+        sumDegree += x.grade!;
+        quantityOptativesDone += 1;
       }
     }
 
@@ -73,9 +82,11 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
     setState(() {
       this.infoSubjects = infoSubjects;
       this.infoOptatives = infoOptatives;
-      this.averageDegree = quantity != 0 ? sumDegree / quantity : 0;
+      this.averageDegree = quantityDone != 0
+          ? sumDegree / (quantityDone + quantityOptativesDone)
+          : 0;
       this.amountSubjects = infoSubjects.length;
-      this.countPassed = quantity;
+      this.countPassed = quantityDone;
       this.passedWithoutFinal = quantityOnlyTp;
       this.degree = degree;
       this.correlativesToDo = correlativesToDo;
@@ -90,6 +101,7 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
           name: "Materia Optativa",
         ),
         widget.degreeIds.first);
+    getData();
   }
 
   @override
