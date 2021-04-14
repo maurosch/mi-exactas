@@ -46,7 +46,9 @@ class SubjectWithUserInfo extends Subject {
         year = json['year'],
         quarter = json['quarter'],
         tp = json['tp'] == null ? false : (json['tp'] == 1 ? true : false),
-		doingNow = json['doingNow'] == null ? false : (json['doingNow'] == 1 ? true : false),
+        doingNow = json['doingNow'] == null
+            ? false
+            : (json['doingNow'] == 1 ? true : false),
         super.fromJson(json);
 }
 
@@ -61,10 +63,10 @@ class OptativeSubjectWithUserInfo extends SubjectWithUserInfo {
 
 class Degree {
   String name;
-  String shortName;
+  String? shortName;
   int id;
   int? optativePoints;
-  Degree({required this.name, required this.shortName, required this.id});
+  Degree({required this.name, this.shortName, required this.id});
 
   Degree.fromJson(Map json)
       : name = json['name'],

@@ -76,10 +76,12 @@ class HeaderCard extends StatelessWidget {
                           LinearProgressIndicator(
                               height: 13,
                               width: 120,
-                              percentages: [
-                                passed / amount,
-                                passedWithoutFinal / amount
-                              ],
+                              percentages: amount != 0
+                                  ? [
+                                      passed / amount,
+                                      passedWithoutFinal / amount
+                                    ]
+                                  : [0, 0],
                               colors: [Colors.teal, Colors.purple[600]!],
                               backColor: Colors.grey),
                           SizedBox(width: 5),

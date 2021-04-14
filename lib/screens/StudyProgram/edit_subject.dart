@@ -17,14 +17,6 @@ class SubjectEditScreen extends StatefulWidget {
 int diffYears() => DateTime.now().difference(DateTime(2020)).inDays ~/ 365;
 
 class SubjectEditScreenState extends State<SubjectEditScreen> {
-  final List<String> cursadas = [
-    'Seleccionar',
-    'Verano',
-    '1° Cuatrimestre',
-    'Invierno',
-    '2° Cuatrimestre'
-  ];
-
   final List<String> yearsList = List<String>.generate(
           diffYears() + 9,
           (i) =>
@@ -134,28 +126,11 @@ class SubjectEditScreenState extends State<SubjectEditScreen> {
                       SizedBox(height: 20),
                       Row(
                         children: <Widget>[
-                          Flexible(
-                              child: DropdownButtonFormField<String>(
-                            decoration:
-                                InputDecoration(labelText: 'Cuatrimestre'),
-                            value: cursadas[
-                                _data!.quarter == null ? 0 : _data!.quarter!],
-                            items: cursadas.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: new Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                int? quarter = cursadas.indexOf(newValue);
-                                if (quarter == 0) quarter = null;
-                                setState(() {
-                                  _data!.quarter = quarter;
-                                });
-                              }
-                            },
-                          )),
+                          SelectCuatrimestre(
+                              quarter: _data!.quarter,
+                              notifyParent: (int? v) => setState(() {
+                                    _data!.quarter = v;
+                                  })),
                           SizedBox(width: 10),
                           Flexible(
                             child: DropdownButtonFormField<String>(
@@ -198,6 +173,39 @@ class SubjectEditScreenState extends State<SubjectEditScreen> {
         ),
       ),
     );
+  }
+}
+
+class SelectCuatrimestre extends StatelessWidget {
+  SelectCuatrimestre({required this.quarter, required this.notifyParent});
+  final int? quarter;
+  final void Function(int?) notifyParent;
+  final List<String> cursadas = [
+    'Seleccionar',
+    'Verano',
+    '1° Cuatrimestre',
+    'Invierno',
+    '2° Cuatrimestre'
+  ];
+  Widget build(BuildContext ctx) {
+    return Flexible(
+        child: DropdownButtonFormField<String>(
+      decoration: InputDecoration(labelText: 'Cuatrimestre'),
+      value: cursadas[quarter == null ? 0 : quarter!],
+      items: cursadas.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: new Text(value),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          int? quarter = cursadas.indexOf(newValue);
+          if (quarter == 0) quarter = null;
+          notifyParent(quarter);
+        }
+      },
+    ));
   }
 }
 

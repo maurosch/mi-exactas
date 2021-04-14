@@ -96,7 +96,7 @@ class _Trailing extends StatelessWidget {
             child: Text(
               "CURSO",
               textAlign: TextAlign.end,
-              style: TextStyle(fontSize: 18.0),
+              style: TextStyle(fontSize: 17.0),
             )),
         SizedBox(width: 2),
         Icon(FontAwesomeIcons.chevronRight),

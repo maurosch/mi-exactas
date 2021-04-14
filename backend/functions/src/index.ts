@@ -24,15 +24,18 @@ const notificateFinales = async () => {
     var endOfToday = new Date(); 
     endOfToday.setHours(23,59,59,999);
 
-    const data = (await admin.firestore().collection('events').where('type','==',TypeEvent.inscripcion_finales)
+    const data = (await admin.firestore().collection('events').where('type','==',TypeEvent.finales)
     .get()).docs.map((v) => v.data() as EventFb)
 
     for(var x of data){
-        if(Math.ceil(Math.abs((x.date_start.toDate() as any) - (new Date() as any))/ (1000 * 60 * 60 * 24)) == 12){
+        console.log(x)
+        const diffInDays = Math.ceil(Math.abs((x.date_start.toDate() as any) - (new Date() as any))/ (1000 * 60 * 60 * 24))
+        console.log(diffInDays)
+        if(diffInDays == 12){
             await admin.messaging().sendToTopic('Finales',{
                 notification: {
                     title: 'Fecha de finales',
-                    body: 'En dos semanas abren las inscripciones a finales'
+                    body: 'En dos semanas hay mesas de finales'
                 }
             })
         } 

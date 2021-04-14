@@ -30,6 +30,8 @@
 .pub/
 /build/
 android/key.properties
+android/keystore.jks
+android/upload_certificate.pem
 
 # Web related
 lib/generated_plugin_registrant.dart
@@ -39,3 +41,5 @@ lib/generated_plugin_registrant.dart
 
 #Secrets
 backend/functions/firebase-secret.json
+
+

@@ -5,6 +5,8 @@ import 'package:plan_estudios/database/main.dart';
 import 'package:plan_estudios/models.dart';
 import 'package:plan_estudios/util.dart';
 
+import 'edit_subject.dart';
+
 class OptativeSubjectEditScreen extends StatefulWidget {
   const OptativeSubjectEditScreen({Key? key, required this.subjectId})
       : super(key: key);
@@ -143,7 +145,7 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                                     _data!.grade = grade;
                                   });
                                 })),
-                        SizedBox(width: 25),
+                        SizedBox(width: 10),
                         Flexible(
                             child: TextFormField(
                           initialValue: _data!.points.toString(),
@@ -163,28 +165,12 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
                       SizedBox(height: 20),
                       Row(
                         children: <Widget>[
-                          Flexible(
-                              child: DropdownButtonFormField<String>(
-                            decoration:
-                                InputDecoration(labelText: 'Cuatrimestre'),
-                            value: cursadas[
-                                _data!.quarter != null ? _data!.quarter! : 0],
-                            items: cursadas.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: new Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                final v = cursadas.indexOf(newValue);
-                                setState(() {
-                                  _data!.quarter = v != 0 ? v : null;
-                                });
-                              }
-                            },
-                          )),
-                          SizedBox(width: 25),
+                          SelectCuatrimestre(
+                              quarter: _data!.quarter,
+                              notifyParent: (int? v) => setState(() {
+                                    _data!.quarter = v;
+                                  })),
+                          SizedBox(width: 10),
                           Flexible(
                             child: DropdownButtonFormField<String>(
                               decoration: InputDecoration(labelText: 'Año'),

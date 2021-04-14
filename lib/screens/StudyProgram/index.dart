@@ -137,45 +137,43 @@ class _StudyProgramScreenState extends State<StudyProgramScreen>
           if (i < optativesStartIndex) {
             subject = infoSubjects![subjectsIndex];
             canBeAproved = correlativesToDo![subject.id]!.length == 0;
+
+            return GestureDetector(
+              onTap: canBeAproved
+                  ? () => Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SubjectEditScreen(subjectId: subject.id)),
+                      )
+                      .then((_) => getData())
+                  : () => HapticFeedback.vibrate(),
+              child: SubjectTile(
+                subject: subject,
+                canBeAproved: canBeAproved,
+                correlatives: correlativesToDo![subject.id]!
+                    .map((x) => x.shortName ?? x.name)
+                    .toList(),
+              ),
+            );
           } else {
             subject = infoOptatives![optativesIndex];
             canBeAproved = true;
+            return GestureDetector(
+              onTap: () => Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            OptativeSubjectEditScreen(subjectId: subject.id)),
+                  )
+                  .then((_) => getData()),
+              child: SubjectTile(
+                subject: subject,
+                canBeAproved: canBeAproved,
+                correlatives: [],
+              ),
+            );
           }
-
-          return GestureDetector(
-            onTap: canBeAproved
-                ? () {
-                    i < optativesStartIndex
-                        ? Navigator.of(context)
-                            .push(
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    SubjectEditScreen(subjectId: subject.id)),
-                          )
-                            .then((_) {
-                            getData();
-                          })
-                        : Navigator.of(context)
-                            .push(
-                            MaterialPageRoute(
-                                builder: (context) => OptativeSubjectEditScreen(
-                                    subjectId: subject.id)),
-                          )
-                            .then((_) {
-                            getData();
-                          });
-                  }
-                : () {
-                    HapticFeedback.vibrate();
-                  },
-            child: SubjectTile(
-              subject: subject,
-              canBeAproved: canBeAproved,
-              correlatives: correlativesToDo![subject.id]!
-                  .map((x) => x.shortName ?? x.name)
-                  .toList(),
-            ),
-          );
         });
   }
 

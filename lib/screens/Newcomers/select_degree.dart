@@ -122,4 +122,9 @@ final data = [
       id: 8,
       color: Colors.brown,
       icon: FontAwesomeIcons.globeAmericas),
+  ItemDegree(
+      title: "Oceonografía",
+      id: 14,
+      color: Colors.blue[700]!,
+      icon: FontAwesomeIcons.water),
 ];
