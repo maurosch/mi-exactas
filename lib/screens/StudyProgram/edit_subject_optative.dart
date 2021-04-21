@@ -62,6 +62,11 @@ class OptativeSubjectEditScreenState extends State<OptativeSubjectEditScreen> {
     return true;
   }
 
+  Future<void> goBack() async {
+
+	  await saveData();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_data == null) return Container();
@@ -303,9 +308,10 @@ class TitleSubject extends StatelessWidget {
       //width: 100,
       margin: EdgeInsets.all(10),
       child: TextFormField(
+		  
           initialValue: name,
           decoration: InputDecoration(suffixIcon: Icon(Icons.edit)),
-          onFieldSubmitted: notifyParent),
+		  onChanged: notifyParent),
     );
   }
 }
